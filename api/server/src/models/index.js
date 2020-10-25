@@ -21,7 +21,7 @@ if (config.environment === 'production') {
     process.env.DB_PASS, {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT,
-      dialect: 'postgres',
+      dialect: 'mysql',
       dialectOption: {
         ssl: true,
         native: true

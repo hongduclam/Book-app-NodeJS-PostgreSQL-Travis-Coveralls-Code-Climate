@@ -7,15 +7,15 @@ cache:
 install:
   - npm install
 services:
-  - postgresql
+  - mysql
 
 env:
   global:
   - NODE_ENV=test
 
 before_script:
-  - psql -c 'create database book_test;' -U postgres
-  - psql -c "CREATE USER steven WITH PASSWORD null;" -U postgres
+  - psql -c 'create database templates_builder;' -U root
+  - psql -c "CREATE USER lamhongdev WITH PASSWORD null;" -U root
   - npm run build
   - npm install -g sequelize-cli
   - sequelize db:migrate

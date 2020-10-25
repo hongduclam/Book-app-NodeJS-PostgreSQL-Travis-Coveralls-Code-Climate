@@ -1,7 +1,8 @@
 import config from 'dotenv';
 import express from 'express';
 import bodyParser from 'body-parser';
-import bookRoutes from './server/routes/BookRoutes';
+import variableRoutes from './server/routes/VariableRoutes';
+import templateRoutes from './server/routes/TemplateRoutes';
 
 config.config();
 
@@ -10,9 +11,19 @@ const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+const withFakeUser = function (req, res, next) {
+  req.user = req.user ? req.user : {
+    id: -1,
+    name: 'admin'
+  };
+  next();
+};
+
 const port = process.env.PORT || 8000;
 
-app.use('/api/v1/books', bookRoutes);
+app.use(withFakeUser);
+app.use('/api/v1/variables', variableRoutes);
+app.use('/api/v1/templates', templateRoutes);
 
 // when a random route is inputed
 app.get('*', (req, res) => res.status(200).send({

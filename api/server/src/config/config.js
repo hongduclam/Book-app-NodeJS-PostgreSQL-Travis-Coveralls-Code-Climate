@@ -1,4 +1,4 @@
-require('dotenv').config(); 
+require('dotenv').config();
 
 
 module.exports = {
@@ -9,19 +9,19 @@ module.exports = {
   // },
 
   development: {
-    database: 'books',
-    username: 'steven',
-    password: null,
+    database: 'templates_builder',
+    username: 'root',
+    password: 'lamhong123!',
     host: '127.0.0.1',
-    dialect: 'postgres'
+    dialect: 'mysql'
   },
 
   test: {
-    database: 'book_test',
-    username: 'steven',
-    password: null,
+    database: 'templates_builder',
+    username: 'root',
+    password: 'lamhong123!',
     host: '127.0.0.1',
-    dialect: 'postgres'
+    dialect: 'mysql'
   },
 
   production: {
@@ -29,6 +29,6 @@ module.exports = {
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
     host: process.env.DB_HOST,
-    dialect: 'postgres'
+    dialect: 'mysql'
   }
 };
