@@ -3,11 +3,16 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import variableRoutes from './server/routes/VariableRoutes';
 import templateRoutes from './server/routes/TemplateRoutes';
+const cors = require('cors');
 
 config.config();
 
-const app = express();
+// const publicFolderPath = `${__dirname}/public`;
+// const db = require('./db');
 
+
+const app = express();
+app.use(cors())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 

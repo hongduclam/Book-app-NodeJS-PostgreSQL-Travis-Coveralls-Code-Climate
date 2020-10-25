@@ -3,7 +3,31 @@ import database from '../src/models';
 class TemplateService {
   static async getAllTemplates() {
     try {
-      return await database.Template.findAll({ include: ['templateVariables'] });
+      const templates = await database.Template.findAll({
+        include: [{
+          model: database.TemplateVariable,
+          as: 'templateVariables',
+          attributes: ['variableId'],
+          include: [
+            {
+              model: database.Variable,
+              as: 'variable'
+            }
+          ]
+        }]
+      });
+      console.log('templates', templates);
+      return templates.map((t) => {
+        const data = t.toJSON();
+        return {
+          ...data,
+          templateVariables: data.templateVariables.map(({ variable }) => {
+            return {
+              id: variable.id, name: variable.name
+            };
+          })
+        };
+      });
     } catch (error) {
       throw error;
     }
@@ -66,10 +90,29 @@ class TemplateService {
     try {
       const theTemplate = await database.Template.findOne({
         where: { id: Number(id) },
-        include: ['templateVariables']
+        include: [
+          {
+            model: database.TemplateVariable,
+            as: 'templateVariables',
+            attributes: ['variableId'],
+            include: [
+              {
+                model: database.Variable,
+                as: 'variable'
+              }
+            ]
+          }
+        ]
       });
-
-      return theTemplate;
+      const data = theTemplate.toJSON();
+      return {
+        ...data,
+        templateVariables: data.templateVariables.map(({ variable }) => {
+          return {
+            id: variable.id, name: variable.name
+          };
+        })
+      };
     } catch (error) {
       throw error;
     }
