@@ -3,37 +3,61 @@ import database from '../src/models';
 class TemplateService {
   static async getAllTemplates() {
     try {
-      return await database.Template.findAll();
+      return await database.Template.findAll({ include: ['templateVariables'] });
     } catch (error) {
       throw error;
     }
   }
 
+  static async createTemplateVariables(templateId, variables = [], transaction) {
+    const promises = [];
+    variables.forEach((tv) => {
+      promises.push(database.TemplateVariable.create({
+        variableId: tv.variableId,
+        templateId
+      }, { transaction }));
+    });
+    await Promise.all(promises);
+  }
+
   static async addTemplate(newTemplate) {
+    let transaction = null;
     try {
-      const templateType = database.TemplateType.findByPk(newTemplate.templateTypeId);
-      return await database.Template.create({
+      transaction = await database.sequelize.transaction();
+      const { templateVariables } = newTemplate;
+      const createdTemplate = await database.Template.create({
         ...newTemplate,
-        templateType
-      });
+      }, { transaction });
+      await this.createTemplateVariables(createdTemplate.id, templateVariables, transaction);
+      await transaction.commit();
+      return createdTemplate;
     } catch (error) {
+      if (transaction) {
+        await transaction.rollback();
+      }
       throw error;
     }
   }
 
   static async updateTemplate(id, updateTemplate) {
+    let transaction = null;
     try {
+      transaction = await database.sequelize.transaction();
       const templateToUpdate = await database.Template.findOne({
         where: { id: Number(id) }
       });
-
       if (templateToUpdate) {
+        const { templateVariables } = updateTemplate;
         await database.Template.update(updateTemplate, { where: { id: Number(id) } });
-
+        await this.createTemplateVariables(id, templateVariables, transaction);
+        await transaction.commit();
         return updateTemplate;
       }
       return null;
     } catch (error) {
+      if (transaction) {
+        await transaction.rollback();
+      }
       throw error;
     }
   }
@@ -41,7 +65,8 @@ class TemplateService {
   static async getOneTemplate(id) {
     try {
       const theTemplate = await database.Template.findOne({
-        where: { id: Number(id) }
+        where: { id: Number(id) },
+        include: ['templateVariables']
       });
 
       return theTemplate;

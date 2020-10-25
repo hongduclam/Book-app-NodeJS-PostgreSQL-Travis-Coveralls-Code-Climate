@@ -43,6 +43,7 @@ module.exports = (sequelize, DataTypes) => {
   });
   Template.associate = function (models) {
     Template.belongsTo(models.TemplateType, { foreignKey: 'templateTypeId' });
+    Template.hasMany(models.TemplateVariable, { as: 'templateVariables' });
   };
   return Template;
 };

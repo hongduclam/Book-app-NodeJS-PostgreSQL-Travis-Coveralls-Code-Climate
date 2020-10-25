@@ -3,15 +3,20 @@ module.exports = (sequelize, DataTypes) => {
     templateId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
     },
     variableId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      primaryKey: true,
     },
+  }, {
+    tableName: 'TemplateVariable',
+    timestamps: false
   });
   TemplateVariable.associate = function (models) {
     TemplateVariable.belongsTo(models.Template, { foreignKey: 'templateId', as: 'template' });
-    TemplateVariable.belongsTo(models.Variable, { foreignKey: 'variableId', as: 'variable' });
+    TemplateVariable.belongsTo(models.Variable, { foreignKey: 'variableId' });
   };
   return TemplateVariable;
 };
