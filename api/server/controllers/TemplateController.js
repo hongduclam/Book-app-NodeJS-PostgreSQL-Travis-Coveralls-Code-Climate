@@ -106,6 +106,30 @@ class TemplateController {
       return util.send(res);
     }
   }
+
+  static async exportTemplate(req, res) {
+    const { id } = req.params;
+
+    if (!Number(id)) {
+      util.setError(400, 'Please provide a numeric value');
+      return util.send(res);
+    }
+
+    try {
+      const rs = await TemplateService.exportTemplate(id, req.body);
+
+      if (rs) {
+        util.setSuccess(200, 'Template printed', rs);
+      } else {
+        util.setError(404, `Template with the id ${id} cannot be found`);
+      }
+
+      return util.send(res);
+    } catch (error) {
+      util.setError(400, error);
+      return util.send(res);
+    }
+  }
 }
 
 export default TemplateController;

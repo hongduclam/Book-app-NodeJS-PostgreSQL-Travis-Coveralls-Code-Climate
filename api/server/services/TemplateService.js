@@ -1,4 +1,10 @@
+import * as uuid from 'uuid';
 import database from '../src/models';
+import { createFilePromise, readFilePromise } from '../utils/fileUtils';
+
+const velocity = require('velocity-template-engine');
+const puppeteer = require('puppeteer');
+const fs = require('fs');
 
 class TemplateService {
   static async getAllTemplates() {
@@ -16,7 +22,6 @@ class TemplateService {
           ]
         }]
       });
-      console.log('templates', templates);
       return templates.map((t) => {
         const data = t.toJSON();
         return {
@@ -51,6 +56,7 @@ class TemplateService {
       const { templateVariables } = newTemplate;
       const createdTemplate = await database.Template.create({
         ...newTemplate,
+        uuid: uuid.v4()
       }, { transaction });
       await this.createTemplateVariables(createdTemplate.id, templateVariables, transaction);
       await transaction.commit();
@@ -109,7 +115,9 @@ class TemplateService {
         ...data,
         templateVariables: data.templateVariables.map(({ variable }) => {
           return {
-            id: variable.id, name: variable.name
+            ...variable,
+            id: variable.id,
+            name: variable.name,
           };
         })
       };
@@ -130,6 +138,62 @@ class TemplateService {
       }
       return null;
     } catch (error) {
+      throw error;
+    }
+  }
+
+  static async exportTemplate(id, { templateContent, templateData }) {
+    try {
+      const templateModel = await database.Template.findOne({ where: { id: Number(id) } });
+      if (templateModel) {
+        const template = templateModel.toJSON();
+        const folderPackageId = template.uuid || uuid.v4();
+        const { dataCss, dataHtml } = templateContent;
+        const modelData = templateData || {};
+        const publicFolderPath = `${global.appRoot}/public`;
+
+        console.log('template.uuid', template.uuid);
+
+        // eslint-disable-next-line no-undef
+        const folderPath = `${publicFolderPath}/${folderPackageId}`;
+
+        if (!fs.existsSync(folderPath)) {
+          fs.mkdirSync(folderPath);
+        }
+        await createFilePromise(`${folderPath}/${'gjsCss'}.css`, dataCss);
+        await createFilePromise(`${folderPath}/${'gjsHtml'}.html`, dataHtml);
+
+        const gjsHtml = await readFilePromise(`${folderPath}/gjsHtml.html`);
+        const htmlContent = velocity.render(gjsHtml, modelData, {});
+
+        const reportHtmlContent = `<!doctype html>
+        <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <link rel="stylesheet" href="./gjsCss.css">
+          </head>
+          <body>${htmlContent}</body>
+        <html>`;
+        const templateHtmlPath = `${folderPath}/report-template.html`;
+
+        await createFilePromise(`${templateHtmlPath}`, reportHtmlContent);
+
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.goto(`http://localhost:${global.port}/public/${folderPackageId}/report-template.html`, { waitUntil: 'networkidle2', });
+        const pdfName = `${template.name.split(' ').join('')}-report.pdf`;
+        const pdfPath = `${folderPath}/${pdfName}`;
+        await page.pdf({
+          path: pdfPath,
+          format: 'letter',
+        });
+        await browser.close();
+        return { pdfName, pdfPath: `public/${folderPackageId}/${pdfName}` };
+      }
+
+      return null;
+    } catch (error) {
+      console.log(error);
       throw error;
     }
   }

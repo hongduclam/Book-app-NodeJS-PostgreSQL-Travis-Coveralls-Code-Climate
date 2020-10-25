@@ -5,6 +5,8 @@ const router = Router();
 
 router.get('/', TemplateController.getAllTemplates);
 router.post('/', TemplateController.addTemplate);
+router.post('/:id/print', TemplateController.exportTemplate);
+
 router.get('/:id', TemplateController.getOneTemplate);
 router.put('/:id', TemplateController.updatedTemplate);
 router.delete('/:id', TemplateController.deleteTemplate);
